@@ -1,19 +1,23 @@
-import app.Calculator
+import token.Token
+import token.Tokenizer
+import visitor.CalcVisitor
+import visitor.ParserVisitor
+import visitor.PrintVisitor
 
 fun main() {
-    val calc = Calculator()
-    while (true) {
-        println("Введите арифметическое выражение:")
+    val input = readLine()!!
+    val tokenizer = Tokenizer(input)
+    val tokens: List<Token> = tokenizer.getTokens()
 
-        val s = readLine()!!
-        try {
-            val res = calc.apply(s)
-            println("Выражение [$s] преобразовали в [${res.output}]. Результат вычислений: ${res.value}")
-        } catch (e: RuntimeException) {
-            error("Error")
-        }
+    val parserVisitor = ParserVisitor()
+    tokens.forEach{ token: Token -> token.accept(parserVisitor) }
 
-        println("Разобрать ещё одно выражение? (Y/no)")
-        if (readLine() == "no") break
-    }
+    val polishTokens: List<Token?> = parserVisitor.polishTokens
+    val printVisitor = PrintVisitor(System.out)
+    polishTokens.forEach { token: Token? -> token?.accept(printVisitor) }
+    println()
+
+    val calcVisitor = CalcVisitor()
+    polishTokens.forEach { token: Token? -> token?.accept(calcVisitor) }
+    println(calcVisitor.result)
 }
